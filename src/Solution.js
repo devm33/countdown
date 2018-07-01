@@ -4,21 +4,27 @@ export default class Solution extends PureComponent {
   constructor(props) {
     super(props);
     this.state = { solution: [] };
-    this.worker = new Worker('search.js');
-    this.worker.addEventListener('message', e => {
-      this.setState({ solution: this.state.solution.concat([e.data]) });
-    });
+    if ('Worker' in window) {
+      this.worker = new Worker('search.js');
+      this.worker.addEventListener('message', e => {
+        this.setState({ solution: this.state.solution.concat([e.data]) });
+      });
+    }
   }
 
   componentDidUpdate(prevProps) {
     if(prevProps.numbers !== this.props.numbers ||
       prevProps.goal !== this.props.goal) {
       this.setState({ solution: [] });
-      this.worker.postMessage({
-        cmd: 'start',
-        numbers: this.props.numbers,
-        goal: this.props.goal,
-      });
+      if(this.worker) {
+        this.worker.postMessage({
+          cmd: 'start',
+          numbers: this.props.numbers,
+          goal: this.props.goal,
+        });
+      } else {
+        this.setState({ solution: ['Web Worker not supported'] });
+      }
     }
   }
 
