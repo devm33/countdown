@@ -1,0 +1,16 @@
+.Board {
+  background-color: #1c85bd;
+  padding: 5px;
+}
+
+.Letter {
+  background-color: #022992;
+  color: white;
+  font-size: 35px;
+  line-height: 50px;
+  width: 50px;
+  display: inline-block;
+  text-align: center;
+  font: sans-serif;
+  margin: 5px;
+}
