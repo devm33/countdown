@@ -1,16 +1,17 @@
 .Board {
   background-color: #1c85bd;
   padding: 5px;
+  display: inline-flex;
+  flex-wrap: wrap;
 }
 
 .Letter {
   background-color: #022992;
   color: white;
-  font-size: 35px;
+  font-size: 25px;
   line-height: 50px;
   width: 50px;
-  display: inline-block;
+  height: 50px;
   text-align: center;
-  font: sans-serif;
   margin: 5px;
 }
