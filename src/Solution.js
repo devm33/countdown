@@ -1,35 +1,32 @@
-import React, { Component } from 'react';
+import React, { PureComponent } from 'react';
 
-export default class Solution extends Component {
+export default class Solution extends PureComponent {
   constructor(props) {
     super(props);
-    this.state = { solution: '' };
+    this.state = { solution: [] };
+    this.worker = new Worker('search.js');
+    this.worker.addEventListener('message', e => {
+      this.setState({ solution: this.state.solution.concat([e.data]) });
+    });
   }
 
-  componentDidUpdate() {
-    // TODO Perform a BFS to determine if a solution is possible
+  componentDidUpdate(prevProps) {
+    if(prevProps.numbers !== this.props.numbers ||
+      prevProps.goal !== this.props.goal) {
+      this.setState({ solution: [] });
+      this.worker.postMessage({
+        cmd: 'start',
+        numbers: this.props.numbers,
+        goal: this.props.goal,
+      });
+    }
   }
 
   render() {
     return (
-      <div>
-        {this.state.solution}
-      </div>
+      <code>
+        {this.state.solution.map((m, i) => <div key={i}>{m}</div>)}
+      </code>
     );
   }
-}
-
-function getNeighbors(a) {
-  var n = [];
-  for(var i = 0; i < a.length - 1; i++) {
-    for(var j = i + 1; j < a.length; j++) {
-      // TODO go through each pairing checking for validity, being the goal, and dupes
-    }
-  }
-
-}
-
-function validIntermediate(n) {
-  // No negative or fractional intermediates allowed
-  return n >= 0 && n % 1 == 0;
 }
