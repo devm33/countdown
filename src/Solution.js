@@ -20,7 +20,7 @@ export default class Solution extends Component {
 }
 
 function getNeighbors(a) {
-  n = [];
+  var n = [];
   for(var i = 0; i < a.length - 1; i++) {
     for(var j = i + 1; j < a.length; j++) {
       // TODO go through each pairing checking for validity, being the goal, and dupes
