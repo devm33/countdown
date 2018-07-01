@@ -17,6 +17,7 @@ export default class Selector extends Component {
 
   pick_(s, b) {
     this.props.setNumbers([].concat(choose(b, BIGINS), choose(s, SMALLS)));
+    this.props.setGoal(Math.floor(Math.random() * 900) + 101);
   }
 
   render() {
