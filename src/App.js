@@ -14,6 +14,10 @@ export default class App extends Component {
   pick(small, big) {
     return this.pick_.bind(this, small, big);
   }
+  
+  pick_(small, big) {
+    // TODO
+  }
 
   show() {
     // TODO solve and display solutions
@@ -24,7 +28,7 @@ export default class App extends Component {
       <div>
         <Board display="COUNTDOWN"/>
         <div className="Buttons">
-          <Button variant="contained" onClick={pick(4,2)}>
+          <Button variant="contained" onClick={this.pick(4,2)}>
             The normal (4 small, 2 big)
           </Button>
           <Button variant="contained" onClick={this.pick(6,0)}>
