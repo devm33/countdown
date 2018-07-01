@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import './Goal.css';
 
-export default class App extends Component {
+export default class Goal extends Component {
   render() {
     var g = ('000' + this.props.goal).substr(-3);
     return (
