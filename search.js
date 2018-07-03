@@ -1,89 +1,104 @@
+/* search.js WebWorker API:
+ *
+ * Request:
+ *   goal: number to search for
+ *   numbers: array of numbers to use for search
+ *
+ * Response:
+ *   type: response type
+ *     MSG: text response
+ *   text: sent for MSG responses
+ *
+ */
 
 addEventListener('message', function(e) {
-  var data = e.data;
-  if(data.cmd === 'start') {
-    postMessage(`Beginning search for ${data.goal} in ${data.numbers}`);
-    search(data.numbers, data.goal);
-  }
+  search(e.data.numbers, e.data.goal);
 }, false);
 
-function search(a, g) {
-  var q = [a.sort(numericCompare)];
-  var s = {};
-  var c;
-  var safety = 0;
-  while(q.length > 0) {
-    // TODO should sort queue by heuristic
-    c = q.shift();
-    addNeighbors(q, s, g, c);
 
-    if(safety++ > 80000) {
-      postMessage('Safety break! ' + q.length);
-      return;
-    }
-    if(safety % 1000 === 0) {
-      postMessage('Q length is ' + q.length + ' current is ' + c);
+function search(a, g) {
+  var q = new Queue();
+  q.enqueue(new Node(a));
+  while(q.hasNext()) {
+    for(var n of getNeighbors(q.dequeue())) {
+      // Check for goal
+      if(n.list.includes(g)) {
+        postMessage({ text: `Goal found: ${n.path}` });
+        // return; Lets try exhaustive!
+      }
+      // Drop leaves
+      if(n.list.length === 1) {
+        continue;
+      }
+      // Enqueue if not seen
+      if(!q.hasSeen(n)) {
+        q.enqueue(n);
+      }
     }
   }
-  postMessage('Search done');
+  postMessage({ text: 'Search done' });
 }
 
-function addNeighbors(q, s, g, a) {
+function getNeighbors(n) {
+  var r = [];
+  var a = n.list;
   for(var i = 0; i < a.length - 1; i++) {
     for(var j = i + 1; j < a.length; j++) {
-      // Addition
-      var t = a[i] + a[j];
-      if(isValidIntermediate(t)) {
-        enqueue(q, s, g, createNewList(a, t, i, j));
-      }
-      // Subtraction
-      t = a[i] - a[j];
-      if(isValidIntermediate(t)) {
-        enqueue(q, s, g, createNewList(a, t, i, j));
-      }
-      // Multiplication
-      t = a[i] * a[j];
-      if(isValidIntermediate(t)) {
-        enqueue(q, s, g, createNewList(a, t, i, j));
-      }
-      // Division
-      t = a[i] / a[j];
-      if(isValidIntermediate(t)) {
-        enqueue(q, s, g, createNewList(a, t, i, j));
+      var l = a.filter((_, k) => k !== i && k !== j);
+      for(var o of OPERATORS) {
+        var t = o.f(a[i], a[j]);
+        if(t === 0 || t === a[i] || t === a[j]) {
+          continue; // Skipping since not useful
+        }
+        if(t < 0 || t % 1 !== 0) {
+          continue; // Skipping since no negative or fractions allowed
+        }
+        r.push(new Node([t].concat(l), ` ${a[i]} ${o.s} ${a[j]} = ${t} `, n));
       }
     }
   }
+  return r;
 }
 
-function enqueue(q, s, g, l) {
-  if(l.includes(g)) {
-    postMessage('Goal found');
-    q.splice(0,q.length); // TODO remove hack to stop search
-  }
-  if(l.length === 1) {
-    return;
-  }
-  if(l.toString() in s) {
-    return;
-  }
-  s[l.toString()] = true;
-  q.push(l);
-}
-
-function createNewList(a, t, i, j) {
-  return [].concat(
-    a.slice(0, i),
-    t,
-    a.slice(i, j-1),
-    a.slice(j+1)
-  ).sort(numericCompare);
-}
-
-function isValidIntermediate(n) {
-  // No negative or fractional intermediates allowed
-  return n >= 0 && n % 1 === 0;
-}
+const OPERATORS = [
+  { s: '+', f: (a,b) => a + b },
+  { s: '-', f: (a,b) => a - b },
+  { s: '*', f: (a,b) => a * b },
+  { s: '/', f: (a,b) => a / b },
+];
 
 function numericCompare(a, b) {
   return a - b;
+}
+
+class Node {
+  constructor(list, op, prev) {
+    this.list = list.sort(numericCompare);
+    if(prev) {
+      this.path = prev.path.concat([op]);
+    } else {
+      this.path = [];
+    }
+  }
+}
+
+class Queue {
+  constructor() {
+    this.q = [];
+    this.s = new Set();
+  }
+  hasNext() {
+    return this.q.length > 0;
+  }
+  hasSeen(n) {
+    return this.s.has(n.list.toString());
+  }
+  enqueue(n) {
+    // TODO should sort the q by a heuristic
+    this.q.push(n);
+    this.s.add(n.toString());
+  }
+  dequeue() {
+    return this.q.shift();
+  }
 }
