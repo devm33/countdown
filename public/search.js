@@ -44,10 +44,7 @@ function getNeighbors(n) {
   var a = n.list;
   for(var i = 0; i < a.length - 1; i++) {
     for(var j = i + 1; j < a.length; j++) {
-      var l = [].concat(a.slice(0,i), a.slice(i,j-1), a.slice(j+1));
-      if(i === 0 & j === 1) {
-      console.log(`List is ${a}, should be removing ${a[i]} (${i}) and ${a[j]} (${j}) -> ${l}`);
-      }
+      var l = a.filter((_, k) => k !== i && k !== j);
       for(var o of OPERATORS) {
         var t = o.f(a[i], a[j]);
         if(t === 0 || t === a[i] || t === a[j]) {
