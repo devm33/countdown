@@ -24,7 +24,7 @@ function search(a, g) {
       // Check for goal
       if(n.list.includes(g)) {
         postMessage({ text: `Goal found: ${n.path}` });
-        return;
+        // return; Lets try exhaustive!
       }
       // Drop leaves
       if(n.list.length === 1) {
@@ -47,22 +47,22 @@ function getNeighbors(n) {
       var l = [].concat(a.slice(0,i), a.slice(i,j-1), a.slice(j+1));
       var t = a[i] + a[j];
       if(isValidIntermediate(t)) {
-        r.push(new Node([t].concat(l), `${a[i]} + ${a[j]}`, n));
+        r.push(new Node([t].concat(l), `${a[i]} + ${a[j]} = ${t} `, n));
       }
       t = a[i] - a[j];
       // TODO skip if a[i]-a[j] == a[j]
       if(isValidIntermediate(t)) {
-        r.push(new Node([t].concat(l), `${a[i]} - ${a[j]}`, n));
+        r.push(new Node([t].concat(l), `${a[i]} - ${a[j]} = ${t} `, n));
       }
       // TODO skip multiplying by 1
       t = a[i] * a[j];
       if(isValidIntermediate(t)) {
-        r.push(new Node([t].concat(l), `${a[i]} * ${a[j]}`, n));
+        r.push(new Node([t].concat(l), `${a[i]} * ${a[j]} = ${t} `, n));
       }
       // TODO skip dividing by 1 and 0
       t = a[i] / a[j];
       if(isValidIntermediate(t)) {
-        r.push(new Node([t].concat(l), `${a[i]} / ${a[j]}`, n));
+        r.push(new Node([t].concat(l), `${a[i]} / ${a[j]} = ${t} `, n));
       }
     }
   }
@@ -72,6 +72,7 @@ function getNeighbors(n) {
 function isValidIntermediate(n) {
   // No negative or fractional intermediates allowed
   return n >= 0 && n % 1 === 0;
+  // TODO can zero ever be a useful intermediate?
 }
 
 function numericCompare(a, b) {
