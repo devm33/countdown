@@ -1,31 +1,30 @@
+/* search.js WebWorker API:
+ *
+ * Request:
+ *   goal: number to search for
+ *   numbers: array of numbers to use for search
+ *
+ * Response:
+ *   type: response type
+ *     MSG: text response
+ *   text: sent for MSG responses
+ *
+ */
 
 addEventListener('message', function(e) {
-  var data = e.data;
-  if(data.cmd === 'start') {
-    postMessage(`Beginning search for ${data.goal} in ${data.numbers}`);
-    search(data.numbers, data.goal);
-  }
+  search(e.data.numbers, e.data.goal);
 }, false);
 
 function search(a, g) {
   var q = [a.sort(numericCompare)];
   var s = {};
   var c;
-  var safety = 0;
   while(q.length > 0) {
     // TODO should sort queue by heuristic
     c = q.shift();
     addNeighbors(q, s, g, c);
-
-    if(safety++ > 80000) {
-      postMessage('Safety break! ' + q.length);
-      return;
-    }
-    if(safety % 1000 === 0) {
-      postMessage('Q length is ' + q.length + ' current is ' + c);
-    }
   }
-  postMessage('Search done');
+  postMessage({ text: 'Search done' });
 }
 
 function addNeighbors(q, s, g, a) {
@@ -38,15 +37,18 @@ function addNeighbors(q, s, g, a) {
       }
       // Subtraction
       t = a[i] - a[j];
+      // TODO skip if a[i]-a[j] == a[j]
       if(isValidIntermediate(t)) {
         enqueue(q, s, g, createNewList(a, t, i, j));
       }
       // Multiplication
+      // TODO skip multiplying by 1
       t = a[i] * a[j];
       if(isValidIntermediate(t)) {
         enqueue(q, s, g, createNewList(a, t, i, j));
       }
       // Division
+      // TODO skip dividing by 1 and 0
       t = a[i] / a[j];
       if(isValidIntermediate(t)) {
         enqueue(q, s, g, createNewList(a, t, i, j));
@@ -57,7 +59,7 @@ function addNeighbors(q, s, g, a) {
 
 function enqueue(q, s, g, l) {
   if(l.includes(g)) {
-    postMessage('Goal found');
+    postMessage({ text: `Goal found ${l}` });
     q.splice(0,q.length); // TODO remove hack to stop search
   }
   if(l.length === 1) {
