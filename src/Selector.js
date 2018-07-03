@@ -51,12 +51,17 @@ function choose(n, a) {
   if(n > l) {
     throw new RangeError(`Cannot choose ${n} from ${l} elements.`);
   }
-  var r = new Array(n);
-  var t = new Array(l);
-  while(n--) {
-    var x  = Math.floor(Math.random() * l);
-    r[n] = a[x in t ? t[x] : x];
-    t[x] = --l;
+  // Fisher-Yates approach
+  var r = a.slice(); // Copy const array
+  for(var i = 0; i < n; i++) {
+    var x  = Math.floor(Math.random() * (l - i)) + i; // Choose from remaining
+    swap(r, x, i);
   }
-  return r;
+  return r.slice(0, n);
+}
+
+function swap(a, x, y) {
+  var t = a[x];
+  a[x] = a[y];
+  a[y] = t;
 }
