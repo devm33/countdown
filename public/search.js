@@ -15,70 +15,58 @@ addEventListener('message', function(e) {
   search(e.data.numbers, e.data.goal);
 }, false);
 
+
 function search(a, g) {
-  var q = [a.sort(numericCompare)];
-  var s = {};
-  var c;
-  while(q.length > 0) {
-    // TODO should sort queue by heuristic
-    c = q.shift();
-    addNeighbors(q, s, g, c);
+  var q = new Queue();
+  q.enqueue(new Node(a));
+  while(q.hasNext()) {
+    for(var n of getNeighbors(q.dequeue())) {
+      // Check for goal
+      if(n.list.includes(g)) {
+        postMessage({ text: `Goal found: ${n.path}` });
+        return;
+      }
+      // Drop leaves
+      if(n.list.length === 1) {
+        continue;
+      }
+      // Enqueue if not seen
+      if(!q.hasSeen(n)) {
+        q.enqueue(n);
+      }
+    }
   }
   postMessage({ text: 'Search done' });
 }
 
-function addNeighbors(q, s, g, a) {
+function getNeighbors(n) {
+  var r = [];
+  var a = n.list;
   for(var i = 0; i < a.length - 1; i++) {
     for(var j = i + 1; j < a.length; j++) {
-      // Addition
+      var l = [].concat(a.slice(0,i), a.slice(i,j-1), a.slice(j+1));
       var t = a[i] + a[j];
       if(isValidIntermediate(t)) {
-        enqueue(q, s, g, createNewList(a, t, i, j));
+        r.push(new Node([t].concat(l), `${a[i]} + ${a[j]}`, n));
       }
-      // Subtraction
       t = a[i] - a[j];
       // TODO skip if a[i]-a[j] == a[j]
       if(isValidIntermediate(t)) {
-        enqueue(q, s, g, createNewList(a, t, i, j));
+        r.push(new Node([t].concat(l), `${a[i]} - ${a[j]}`, n));
       }
-      // Multiplication
       // TODO skip multiplying by 1
       t = a[i] * a[j];
       if(isValidIntermediate(t)) {
-        enqueue(q, s, g, createNewList(a, t, i, j));
+        r.push(new Node([t].concat(l), `${a[i]} * ${a[j]}`, n));
       }
-      // Division
       // TODO skip dividing by 1 and 0
       t = a[i] / a[j];
       if(isValidIntermediate(t)) {
-        enqueue(q, s, g, createNewList(a, t, i, j));
+        r.push(new Node([t].concat(l), `${a[i]} / ${a[j]}`, n));
       }
     }
   }
-}
-
-function enqueue(q, s, g, l) {
-  if(l.includes(g)) {
-    postMessage({ text: `Goal found ${l}` });
-    q.splice(0,q.length); // TODO remove hack to stop search
-  }
-  if(l.length === 1) {
-    return;
-  }
-  if(l.toString() in s) {
-    return;
-  }
-  s[l.toString()] = true;
-  q.push(l);
-}
-
-function createNewList(a, t, i, j) {
-  return [].concat(
-    a.slice(0, i),
-    t,
-    a.slice(i, j-1),
-    a.slice(j+1)
-  ).sort(numericCompare);
+  return r;
 }
 
 function isValidIntermediate(n) {
@@ -88,4 +76,36 @@ function isValidIntermediate(n) {
 
 function numericCompare(a, b) {
   return a - b;
+}
+
+class Node {
+  constructor(list, op, prev) {
+    this.list = list.sort(numericCompare);
+    if(prev) {
+      this.path = prev.path.concat([op]);
+    } else {
+      this.path = [];
+    }
+  }
+}
+
+class Queue {
+  constructor() {
+    this.q = [];
+    this.s = new Set();
+  }
+  hasNext() {
+    return this.q.length > 0;
+  }
+  hasSeen(n) {
+    return this.s.has(n.list.toString());
+  }
+  enqueue(n) {
+    // TODO should sort the q by a heuristic
+    this.q.push(n);
+    this.s.add(n.toString());
+  }
+  dequeue() {
+    return this.q.shift();
+  }
 }
