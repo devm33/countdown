@@ -45,35 +45,30 @@ function getNeighbors(n) {
   for(var i = 0; i < a.length - 1; i++) {
     for(var j = i + 1; j < a.length; j++) {
       var l = [].concat(a.slice(0,i), a.slice(i,j-1), a.slice(j+1));
-      var t = a[i] + a[j];
-      if(isValidIntermediate(t)) {
-        r.push(new Node([t].concat(l), `${a[i]} + ${a[j]} = ${t} `, n));
+      if(i === 0 & j === 1) {
+      console.log(`List is ${a}, should be removing ${a[i]} (${i}) and ${a[j]} (${j}) -> ${l}`);
       }
-      t = a[i] - a[j];
-      // TODO skip if a[i]-a[j] == a[j]
-      if(isValidIntermediate(t)) {
-        r.push(new Node([t].concat(l), `${a[i]} - ${a[j]} = ${t} `, n));
-      }
-      // TODO skip multiplying by 1
-      t = a[i] * a[j];
-      if(isValidIntermediate(t)) {
-        r.push(new Node([t].concat(l), `${a[i]} * ${a[j]} = ${t} `, n));
-      }
-      // TODO skip dividing by 1 and 0
-      t = a[i] / a[j];
-      if(isValidIntermediate(t)) {
-        r.push(new Node([t].concat(l), `${a[i]} / ${a[j]} = ${t} `, n));
+      for(var o of OPERATORS) {
+        var t = o.f(a[i], a[j]);
+        if(t === 0 || t === a[i] || t === a[j]) {
+          continue; // Skipping since not useful
+        }
+        if(t < 0 || t % 1 !== 0) {
+          continue; // Skipping since no negative or fractions allowed
+        }
+        r.push(new Node([t].concat(l), ` ${a[i]} ${o.s} ${a[j]} = ${t} `, n));
       }
     }
   }
   return r;
 }
 
-function isValidIntermediate(n) {
-  // No negative or fractional intermediates allowed
-  return n >= 0 && n % 1 === 0;
-  // TODO can zero ever be a useful intermediate?
-}
+const OPERATORS = [
+  { s: '+', f: (a,b) => a + b },
+  { s: '-', f: (a,b) => a - b },
+  { s: '*', f: (a,b) => a * b },
+  { s: '/', f: (a,b) => a / b },
+];
 
 function numericCompare(a, b) {
   return a - b;
