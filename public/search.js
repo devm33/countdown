@@ -4,11 +4,9 @@
  *   goal: number to search for
  *   numbers: array of numbers to use for search
  *
- * Response:
- *   type: response type
- *     MSG: text response
- *   text: sent for MSG responses
- *
+ * Responses:
+ *   type: GOAL, path: PathNode
+ *   type: DONE, time: time spent on search
  */
 
 addEventListener('message', function(e) {
@@ -16,15 +14,15 @@ addEventListener('message', function(e) {
 }, false);
 
 function search(a, g) {
-  postMessage({ text: `Searching for ${g}` });
+  var start = performance.now();
   var q = new Queue();
   q.enqueue(new Node(a));
   while(q.hasNext()) {
     for(var n of getNeighbors(q.dequeue())) {
-      // Check for goal
+      // Check for goal TODO only check new node
       if(n.has(g)) {
         var a = n.list.find(v => v.value === g);
-        postMessage({ text: `Goal found ${a.print()}` });
+        postMessage({ type: 'GOAL', path: a });
         continue; // Dont search past goal
         // return; Lets try exhaustive!
       }
@@ -38,7 +36,7 @@ function search(a, g) {
       }
     }
   }
-  postMessage({ text: 'Search done' });
+  postMessage({ type: 'DONE', time: (performance.now() - start) / 1000 });
 }
 
 function getNeighbors(n) {
@@ -126,12 +124,6 @@ class PathNode {
     this.op = op;
     this.left = left;
     this.right = right;
-  }
-  print() {
-    if(this.op) {
-      return `${this.value} = (${this.left.print()}) ${this.op} (${this.right.print()})`;
-    }
-    return this.value;
   }
   static compare(a, b) {
     return a.value - b.value;
