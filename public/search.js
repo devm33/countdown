@@ -6,6 +6,7 @@
  *
  * Responses:
  *   type: GOAL, path: PathNode
+ *   type: CLOSEST, path: PathNode
  *   type: DONE, time: time spent on search
  */
 
@@ -15,26 +16,28 @@ addEventListener('message', function(e) {
 
 function search(a, g) {
   var start = performance.now();
+  var closest = g;
+  var goalFound = false;
   var q = new Queue();
   q.enqueue(new Node(a));
   while(q.hasNext()) {
-    for(var n of getNeighbors(q.dequeue())) {
-      // Check for goal TODO only check new node
-      if(n.has(g)) {
-        var a = n.list.find(v => v.value === g);
-        postMessage({ type: 'GOAL', path: a });
-        continue; // Dont search past goal
-        // return; Lets try exhaustive!
+    getNeighbors(q.dequeue()).forEach(([p,n]) => {
+      if(p.value === g) { // Check for goal
+        goalFound = true;
+        postMessage({ type: 'GOAL', path: p });
+        return; // Dont search past goal
+      } else if(!goalFound && p.value < g && g - p.value < closest) {
+        closest = g - p.value;
+        postMessage({ type: 'CLOSEST', path: p });
       }
-      // Drop leaves
-      if(n.list.length === 1) {
-        continue;
+      if(n.list.length === 1) { // Drop leaves
+        return;
       }
       // Enqueue if not seen
       if(!q.hasSeen(n)) {
         q.enqueue(n);
       }
-    }
+    });
   }
   postMessage({ type: 'DONE', time: (performance.now() - start) / 1000 });
 }
@@ -61,7 +64,8 @@ function getNeighbors(n) {
         if(t < 0 || t % 1 !== 0) {
           continue; // Skipping since no negative or fractions allowed
         }
-        r.push(new Node(l, new PathNode(t, o.s, a[i], a[j])));
+        var p = new PathNode(t, o.s, a[i], a[j]);
+        r.push([p, new Node(l, p)]);
       }
     }
   }

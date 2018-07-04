@@ -20,6 +20,7 @@ export default class Solution extends PureComponent {
         this.state.paths.push(m.path);
         this.setState({ paths: this.state.paths });
         break;
+      case 'CLOSEST': this.setState({ closest: m.path }); break;
       case 'DONE': this.setState({ complete: true, time: m.time }); break;
       default: console.error('Unknown message from worker');
     }
@@ -28,7 +29,7 @@ export default class Solution extends PureComponent {
   componentDidUpdate(prevProps) {
     if(prevProps.numbers !== this.props.numbers ||
       prevProps.goal !== this.props.goal) {
-      this.setState({ complete: false, solution: [] });
+      this.setState(this.getInitState());
       if(this.worker) {
         this.worker.postMessage({
           numbers: this.props.numbers,
@@ -40,29 +41,31 @@ export default class Solution extends PureComponent {
     }
   }
 
+  print(p) {
+    // TODO change this to draw tree (and overlapping list of trees)
+    if(p.op) {
+      return `${p.value} = (${this.print(p.left)}) ${p.op} (${this.print(p.right)})`;
+    }
+    return p.value;
+  }
+
   render() {
     if(!this.props.goal) {
       return <div></div>;
     }
     return (
       <div>
-        <div>
-          { this.state.complete &&
-              <div>Search completed in {this.state.time} seconds.</div>
-          }
-          <div>Found {this.state.paths.length} unique solutions.</div>
-          <ul>
-            {this.state.paths.map((m, i) => <li key={i}>{print(m)}</li>)}
-          </ul>
-        </div>
+        <div>Found {this.state.paths.length} unique solutions.</div>
+        <ul>
+          {this.state.paths.map((m, i) => <li key={i}>{this.print(m)}</li>)}
+        </ul>
+        { this.state.paths.length === 0 && this.state.closest &&
+            <div>Closest found: {this.print(this.state.closest)}</div>
+        }
+        { this.state.complete &&
+            <div>Search completed in {this.state.time} seconds.</div>
+        }
       </div>
     );
   }
-}
-
-function print(p) {
-  if(p.op) {
-    return `${p.value} = (${print(p.left)}) ${p.op} (${print(p.right)})`;
-  }
-  return p.value;
 }
