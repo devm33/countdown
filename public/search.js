@@ -22,8 +22,8 @@ function search(a, g) {
   while(q.hasNext()) {
     for(var n of getNeighbors(q.dequeue())) {
       // Check for goal
-      var a = n.list.find(v => v.value === g);
-      if(a) {
+      if(n.has(g)) {
+        var a = n.list.find(v => v.value === g);
         postMessage({ text: `Goal found ${a.print()}` });
         continue; // Dont search past goal
         // return; Lets try exhaustive!
@@ -110,6 +110,10 @@ class Node {
     } else {
       this.list = list.map(v => new PathNode(v)).sort(PathNode.compare);
     }
+    this.set = new Set(this.list.map(v => v.value));
+  }
+  has(v) {
+    return this.set.has(v);
   }
   getKey() {
     return this.list.reduce((a, v) => a + ',' + v.value, '');
