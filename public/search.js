@@ -21,8 +21,9 @@ function search(a, g) {
   while(q.hasNext()) {
     for(var n of getNeighbors(q.dequeue())) {
       // Check for goal
-      if(n.list.includes(g)) {
-        postMessage({ text: `Goal found: ${n.path}` });
+      if(g in n.path) {
+        postMessage({ text: 'Goal found', obj: n.path[g] });
+        continue; // Dont search past goal
         // return; Lets try exhaustive!
       }
       // Drop leaves
@@ -43,7 +44,7 @@ function getNeighbors(n) {
   var a = n.list;
   for(var i = 0; i < a.length - 1; i++) {
     for(var j = i + 1; j < a.length; j++) {
-      var l = a.filter((_, k) => k !== i && k !== j);
+      var l = a.filter((_, k) => k !== i && k !== j); // List without current
       for(var o of OPERATORS) {
         var t = o.f(a[i], a[j]);
         if(t === 0 || t === a[i] || t === a[j]) {
@@ -52,7 +53,7 @@ function getNeighbors(n) {
         if(t < 0 || t % 1 !== 0) {
           continue; // Skipping since no negative or fractions allowed
         }
-        r.push(new Node([t].concat(l), ` ${a[i]} ${o.s} ${a[j]} = ${t} `, n));
+        r.push(new Node([t].concat(l), t, o.s, a[i], a[j], n));
       }
     }
   }
@@ -60,8 +61,8 @@ function getNeighbors(n) {
 }
 
 const OPERATORS = [
-  { s: '+', f: (a,b) => a + b },
-  { s: '-', f: (a,b) => a - b },
+  { s: '+', f: (a,b) => a + b }, // TODO add check here to skip if a < b
+  { s: '-', f: (a,b) => a - b }, // to reduce duplicates
   { s: '*', f: (a,b) => a * b },
   { s: '/', f: (a,b) => a / b },
 ];
@@ -88,13 +89,27 @@ class Queue {
 }
 
 class Node {
-  constructor(list, op, prev) {
+  constructor(list, newval, op, left, right, prev) {
     this.list = list.sort(numericCompare);
     if(prev) {
-      this.path = prev.path.concat([op]);
+      this.path = prev.path;
+      this.path[newval] =
+        new PathNode(newval, op, prev.path[left], prev.path[right]);
     } else {
-      this.path = [];
+      this.path = list.reduce((a, v) => {
+        a[v] = new PathNode(v);
+        return a;
+      }, {});
     }
+  }
+}
+
+class PathNode {
+  constructor(value, op, left, right) {
+    this.value = value;
+    this.op = op;
+    this.left = left;
+    this.right = right;
   }
 }
 
