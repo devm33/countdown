@@ -7,7 +7,6 @@ export default class Solution extends PureComponent {
     if ('Worker' in window) {
       this.worker = new Worker('search.js');
       this.worker.addEventListener('message', e => {
-        console.log(e.data.obj);
         this.setState({ solution: this.state.solution.concat([e.data.text]) });
       });
     }

@@ -16,13 +16,15 @@ addEventListener('message', function(e) {
 }, false);
 
 function search(a, g) {
+  postMessage({ text: `Searching for ${g}` });
   var q = new Queue();
   q.enqueue(new Node(a));
   while(q.hasNext()) {
     for(var n of getNeighbors(q.dequeue())) {
       // Check for goal
-      if(g in n.path) {
-        postMessage({ text: 'Goal found', obj: n.path[g] });
+      var a = n.list.find(v => v.value === g);
+      if(a) {
+        postMessage({ text: `Goal found ${a.print()}` });
         continue; // Dont search past goal
         // return; Lets try exhaustive!
       }
@@ -42,18 +44,26 @@ function search(a, g) {
 function getNeighbors(n) {
   var r = [];
   var a = n.list;
-  for(var i = 0; i < a.length - 1; i++) {
-    for(var j = i + 1; j < a.length; j++) {
+  for(var i = 0; i < a.length; i++) {
+    for(var j = 0; j < a.length; j++) {
+      if(i == j) {
+        continue; // Cant use the same number twice
+      }
+      if(a[i].value < a[j].value) {
+        // Skip these to remove duplicate paths from associative operators
+        // and avoid invalid intermediates fro other operators.
+        continue;
+      }
       var l = a.filter((_, k) => k !== i && k !== j); // List without current
       for(var o of OPERATORS) {
-        var t = o.f(a[i], a[j]);
-        if(t === 0 || t === a[i] || t === a[j]) {
+        var t = o.f(a[i].value, a[j].value);
+        if(t === 0 || t === a[i].value || t === a[j].value) {
           continue; // Skipping since not useful
         }
         if(t < 0 || t % 1 !== 0) {
           continue; // Skipping since no negative or fractions allowed
         }
-        r.push(new Node([t].concat(l), t, o.s, a[i], a[j], n));
+        r.push(new Node(l, new PathNode(t, o.s, a[i], a[j])));
       }
     }
   }
@@ -61,8 +71,8 @@ function getNeighbors(n) {
 }
 
 const OPERATORS = [
-  { s: '+', f: (a,b) => a + b }, // TODO add check here to skip if a < b
-  { s: '-', f: (a,b) => a - b }, // to reduce duplicates
+  { s: '+', f: (a,b) => a + b },
+  { s: '-', f: (a,b) => a - b },
   { s: '*', f: (a,b) => a * b },
   { s: '/', f: (a,b) => a / b },
 ];
@@ -89,18 +99,20 @@ class Queue {
 }
 
 class Node {
-  constructor(list, newval, op, left, right, prev) {
-    this.list = list.sort(numericCompare);
-    if(prev) {
-      this.path = prev.path;
-      this.path[newval] =
-        new PathNode(newval, op, prev.path[left], prev.path[right]);
+  constructor(list, node) {
+    if(node) {
+      this.list = list.slice(); // Shallow copy list
+      var i = 0; // Insert new node in sorted order
+      while(i < this.list.length && this.list[i].value < node.value) {
+        i++;
+      }
+      this.list.splice(i, 0, node);
     } else {
-      this.path = list.reduce((a, v) => {
-        a[v] = new PathNode(v);
-        return a;
-      }, {});
+      this.list = list.map(v => new PathNode(v)).sort(PathNode.compare);
     }
+  }
+  getKey() {
+    return this.list.reduce((a, v) => a + ',' + v.value, '');
   }
 }
 
@@ -111,8 +123,13 @@ class PathNode {
     this.left = left;
     this.right = right;
   }
-}
-
-function numericCompare(a, b) {
-  return a - b;
+  print() {
+    if(this.op) {
+      return `${this.value} = (${this.left.print()}) ${this.op} (${this.right.print()})`;
+    }
+    return this.value;
+  }
+  static compare(a, b) {
+    return a.value - b.value;
+  }
 }
