@@ -86,12 +86,12 @@ class Queue {
     return this.q.length > 0;
   }
   hasSeen(n) {
-    return this.s.has(n.list.toString());
+    return this.s.has(n.getKey());
   }
   enqueue(n) {
     // TODO should sort the q by a heuristic
     this.q.push(n);
-    this.s.add(n.toString());
+    this.s.add(n.getKey());
   }
   dequeue() {
     return this.q.shift();
