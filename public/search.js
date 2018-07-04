@@ -53,6 +53,7 @@ function getNeighbors(n) {
       if(a[i].value < a[j].value) {
         // Skip these to remove duplicate paths from associative operators
         // and avoid invalid intermediates fro other operators.
+        // TODO minor associative issue remains from: a-b+c = a+c-b
         continue;
       }
       var l = a.filter((_, k) => k !== i && k !== j); // List without current
