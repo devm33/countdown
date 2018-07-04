@@ -15,7 +15,6 @@ addEventListener('message', function(e) {
   search(e.data.numbers, e.data.goal);
 }, false);
 
-
 function search(a, g) {
   var q = new Queue();
   q.enqueue(new Node(a));
@@ -67,21 +66,6 @@ const OPERATORS = [
   { s: '/', f: (a,b) => a / b },
 ];
 
-function numericCompare(a, b) {
-  return a - b;
-}
-
-class Node {
-  constructor(list, op, prev) {
-    this.list = list.sort(numericCompare);
-    if(prev) {
-      this.path = prev.path.concat([op]);
-    } else {
-      this.path = [];
-    }
-  }
-}
-
 class Queue {
   constructor() {
     this.q = [];
@@ -101,4 +85,19 @@ class Queue {
   dequeue() {
     return this.q.shift();
   }
+}
+
+class Node {
+  constructor(list, op, prev) {
+    this.list = list.sort(numericCompare);
+    if(prev) {
+      this.path = prev.path.concat([op]);
+    } else {
+      this.path = [];
+    }
+  }
+}
+
+function numericCompare(a, b) {
+  return a - b;
 }
