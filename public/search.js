@@ -113,10 +113,6 @@ class Node {
     } else {
       this.list = list.map(v => new PathNode(v)).sort(PathNode.compare);
     }
-    this.set = new Set(this.list.map(v => v.value));
-  }
-  has(v) {
-    return this.set.has(v);
   }
   getKey() {
     return this.list.reduce((a, v) => a + ',' + v.value, '');
