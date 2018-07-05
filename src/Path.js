@@ -7,6 +7,7 @@ import { hierarchy } from 'd3-hierarchy';
 
 const width=600, height=300, fontSize=12,
   margin = { top: 40, left: 0, right: 0, bottom: 40 };
+// TODO make width responsive?
 
 function convert(n) {
   if(!n.op) {
