@@ -76,7 +76,7 @@ function getNeighbors(n) {
 const OPERATORS = [
   { s: '+', f: (a,b) => a + b },
   { s: '-', f: (a,b) => a - b },
-  { s: '*', f: (a,b) => a * b },
+  { s: '×', f: (a,b) => a * b },
   { s: '/', f: (a,b) => a / b },
 ];
 

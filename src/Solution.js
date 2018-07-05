@@ -1,4 +1,7 @@
 import React, { PureComponent } from 'react';
+import Button from '@material-ui/core/Button';
+import Path from './Path';
+import './Solution.css';
 
 export default class Solution extends PureComponent {
   constructor(props) {
@@ -8,10 +11,11 @@ export default class Solution extends PureComponent {
       this.worker = new Worker('search.js');
       this.worker.addEventListener('message', e => this.onMessage(e.data));
     }
+    this.toggleSolution = this.toggleSolution.bind(this);
   }
 
   getInitState() {
-    return { complete: false, time: 0, paths: [] };
+    return { complete: false, time: 0, paths: [], showSolution: false };
   }
 
   onMessage(m) {
@@ -49,21 +53,39 @@ export default class Solution extends PureComponent {
     return p.value;
   }
 
+  toggleSolution() {
+    this.setState({ showSolution: !this.state.showSolution });
+  }
+
   render() {
     if(!this.props.goal) {
       return <div></div>;
     }
     return (
       <div>
-        <div>Found {this.state.paths.length} unique solutions.</div>
-        <ul>
-          {this.state.paths.map((m, i) => <li key={i}>{this.print(m)}</li>)}
-        </ul>
-        { this.state.paths.length === 0 && this.state.closest &&
-            <div>Closest found: {this.print(this.state.closest)}</div>
-        }
-        { this.state.complete &&
-            <div>Search completed in {this.state.time} seconds.</div>
+        <div className="spacing">
+          <span>Found {this.state.paths.length} unique solutions. </span>
+          { this.state.complete &&
+              <span>Search completed in {this.state.time} seconds. </span>
+          }
+          <Button variant="contained" color="primary"
+            onClick={this.toggleSolution}>
+            { this.state.showSolution ? "Hide" :
+              this.state.paths.length > 1 ? "Show solutions" :
+              this.state.paths.length > 0 ? "Show solution" : "Show nearest"
+            }
+          </Button>
+        </div>
+        { this.state.showSolution &&
+            <div>
+              {this.state.paths.map((m, i) => <div><Path key={i} node={m}/></div>)}
+              {this.state.paths.length === 0 && this.state.closest && 
+                  <div>
+                    <div>Closest found: {this.state.closest.value}</div>
+                    <Path node={this.state.closest}/>
+                  </div>
+              }
+            </div>
         }
       </div>
     );
