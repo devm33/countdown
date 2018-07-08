@@ -33,11 +33,18 @@ export default function Path({node}) {
           width - margin.left - margin.right,
           height - margin.top - margin.bottom
         ]}
-        linkComponent={Link}
-        nodeComponent={Node}
+        children={createChildren}
       />
     </svg>
   );
+}
+
+function createChildren({data}) {
+  // Invert dendrogram
+  data.each(node => node.y = height - margin.bottom - node.y - margin.top);
+  return [].concat(
+    data.links().map((link, i) => <Link key={`link-${i}`} link={link}/>),
+    data.descendants().map((node, i) => <Node key={`node-${i}`} node={node}/>));
 }
 
 function Link({link}) {
