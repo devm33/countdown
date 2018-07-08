@@ -78,7 +78,7 @@ export default class Solution extends PureComponent {
         </div>
         { this.state.showSolution &&
             <div>
-              {this.state.paths.map((m, i) => <div><Path key={i} node={m}/></div>)}
+              {this.state.paths.map((m, i) => <div key={i}><Path node={m}/></div>)}
               {this.state.paths.length === 0 && this.state.closest && 
                   <div>
                     <div>Closest found: {this.state.closest.value}</div>
